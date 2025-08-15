@@ -1,306 +1,248 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>手机号信息查询系统</title>
-  <!-- 引入Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- 引入Font Awesome -->
-  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-  <!--<link rel="stylesheet" href="css/font-awesome.min.css">-->
-  <!--<script src="https://cdn.jsdelivr.net/npm/jsencrypt@3.3.1/bin/jsencrypt.min.js"></script>-->
-  <script src="js/jsencrypt.min.js"></script>
-  <!-- 引入 CryptoJS 核心库 -->
-  <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>-->
-  <script src="js/crypto-js.min.js"></script>
-  <!-- 配置Tailwind自定义颜色 -->
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#3B82F6',
-            secondary: '#64748B',
-            success: '#10B981',
-            danger: '#EF4444',
-          },
-        },
-      }
-    }
-  </script>
-
-  <style type="text/tailwindcss">
-    @layer utilities {
-      .content-auto {
-        content-visibility: auto;
-      }
-      .slide-up {
-        animation: slideUp 0.3s ease forwards;
-      }
-      .fade-in {
-        animation: fadeIn 0.3s ease forwards;
-      }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>111搜索會員</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    body {
+      font-family: "Helvetica Neue", sans-serif;
+      background-color: #f5f7fa;
+      padding: 20px;
+      box-sizing: border-box;
     }
 
-    @keyframes slideUp {
-      from { transform: translateY(20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    .search-box {
+      display: flex;
+      margin-top: 20px;
+    }
+
+    .search-box input {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px 0 0 8px;
+      outline: none;
+    }
+
+    .search-box button {
+      padding: 12px 20px;
+      font-size: 16px;
+      border: none;
+      background-color: #4a90e2;
+      color: white;
+      border-radius: 0 8px 8px 0;
+      cursor: pointer;
+    }
+
+    .search-box button:hover {
+      background-color: #357ab8;
+    }
+
+    .results {
+      margin-top: 20px;
+      background-color: #f9f9f9;
+      padding: 10px;
+      border-radius: 8px;
+      min-height: 100px;
+      font-size: 15px;
+      white-space: pre-wrap;
+    }
+
+    .table-container {
+      margin-top: 30px;
+    }
+
+    .table-container h3 {
+      text-align: left;
+      color: #333;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    table {
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
+      background-color: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    th:nth-child(1), td:nth-child(1) {
+      width: 26%;
+    }
+
+    th:nth-child(2), td:nth-child(2) {
+      width: 34%;
+    }
+
+    th:nth-child(3), td:nth-child(3) {
+      width: 20%;
+    }
+
+    th:nth-child(4), td:nth-child(4) {
+      width: 20%;
+    }
+
+    .back-button {
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    .back-button button {
+      padding: 12px 30px;
+      font-size: 16px;
+      background-color: #999;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .back-button button:hover {
+      background-color: #666;
+    }
+
+    .date-header {
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 5px;
+      margin-bottom: 8px;
+      font-weight: bold;
+      font-size: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .date-header a {
+      font-size: 13px;
+      text-decoration: underline;
+      color: #4a90e2;
     }
   </style>
 </head>
-<body class="bg-gray-50 font-sans text-gray-800 min-h-screen">
-<div class="container mx-auto px-4 py-6 max-w-3xl">
-  <!-- 标题区域 -->
-  <header class="mb-8 text-center">
-    <h1 class="text-[clamp(1.5rem,5vw,2rem)] font-bold text-primary mb-2">
-      <i class="fa fa-mobile-phone mr-2 text-xl"></i>信息查询系统
-    </h1>
-    <p class="text-gray-500">通过手机号查询相关记录信息</p>
-  </header>
+<body>
 
-  <!-- 查询区域 -->
-  <section class="bg-white rounded-xl shadow-md p-5 mb-6">
-    <div class="flex flex-col sm:flex-row gap-4">
-      <div class="flex-grow">
-        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">手机号码</label>
-        <div class="relative">
-            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-              <i class="fa fa-phone"></i>
-            </span>
-          <input
-                  type="tel"
-                  id="phone"
-                  placeholder="请输入11位手机号码"
-                  class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
-                  maxlength="11"
-          >
-        </div>
-      </div>
-      <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
-        <button id="queryBtn" class="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg transition-all flex items-center justify-center shadow-sm hover:shadow">
-          <i class="fa fa-search mr-2"></i> 查询
-        </button>
-        <button id="addBtn" class="bg-success hover:bg-success/90 text-white px-6 py-3 rounded-lg transition-all flex items-center justify-center shadow-sm hover:shadow">
-          <i class="fa fa-plus mr-2"></i> 新增
-        </button>
-      </div>
+  <div class="container">
+    <h2>搜索會員信息</h2>
+
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="輸入手機號">
+      <button onclick="search()">查詢</button>
     </div>
-  </section>
 
-  <!-- 结果展示区域 -->
-  <section class="bg-white rounded-xl shadow-md overflow-hidden">
-    <div class="p-5 border-b border-gray-100 bg-gray-50">
-      <h2 class="text-lg font-semibold text-gray-800">查询结果</h2>
+    <div class="results" id="resultBox">
+      🔍 請輸入手機號後點擊查詢。
     </div>
-    <div id="resultContainer" class="p-4">
-      <!-- 初始状态 -->
-      <div id="initialState" class="py-12 text-center text-gray-500">
-        <i class="fa fa-database text-4xl mb-3 opacity-30"></i>
-        <p>请输入手机号码并点击查询按钮</p>
-      </div>
 
-      <!-- 加载状态 (默认隐藏) -->
-      <div id="loadingState" class="py-12 text-center hidden">
-        <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mb-3"></div>
-        <p>正在查询数据...</p>
-      </div>
-
-      <!-- 无结果状态 (默认隐藏) -->
-      <div id="emptyState" class="py-12 text-center text-gray-500 hidden">
-        <i class="fa fa-search text-4xl mb-3 opacity-30"></i>
-        <p>未找到匹配的记录</p>
-      </div>
-
-      <!-- 结果列表 (默认隐藏) -->
-      <div id="resultList" class="divide-y divide-gray-100 hidden">
-        <!-- 结果项将通过JS动态生成 -->
-      </div>
+    <div class="table-container">
+      <h3 class="date-header">
+        日期
+        
+      </h3>
+      <table>
+        <thead>
+          <tr>
+            <th>日期</th>
+            <th>地址</th>
+            <th>城市</th>
+            <th>备注</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>2025-06-01</td>
+            <td>台北市信義路100號</td>
+            <td>台北</td>
+            <td>首次註冊</td>
+          </tr>
+          <tr>
+            <td>2025-05-15</td>
+            <td>高雄市中山路200號</td>
+            <td>高雄</td>
+            <td>升級為年費會員</td>
+          </tr>
+          <tr>
+            <td>2025-03-20</td>
+            <td>新北市文化路12巷3號</td>
+            <td>新北</td>
+            <td>已付款</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-  </section>
-</div>
 
-<!-- 详情弹窗 -->
-<div id="detailModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden fade-in">
-  <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 slide-up">
-    <div class="p-5 border-b border-gray-100 flex justify-between items-center">
-      <h3 class="text-lg font-semibold">详细信息</h3>
-      <button id="closeDetailBtn" class="text-gray-400 hover:text-gray-600 transition-colors">
-        <i class="fa fa-times text-xl"></i>
-      </button>
-    </div>
-    <div id="detailContent" class="p-5 space-y-4">
-      <!-- 详情内容将通过JS动态生成 -->
-    </div>
-    <div class="p-4 border-t border-gray-100 flex justify-end">
-      <button id="closeDetailBtn2" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2 rounded-lg transition-colors">
-        关闭
-      </button>
+    <div class="back-button">
+      <button onclick="history.back()">返回</button>
     </div>
   </div>
-</div>
 
-<!-- 新增弹窗 -->
-<div id="addModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden fade-in p-4 pt-8 pb-6">
-  <div class="bg-white rounded-xl shadow-xl w-full max-w-lg mx-auto slide-up transform transition-all duration-300 ">
-    <div class="p-3 sm:p-4 border-b border-gray-100 flex justify-between items-center">
-      <h3 class="text-base font-semibold">新增记录</h3>
-      <button id="closeAddBtn" class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100">
-        <i class="fa fa-times text-xl"></i>
-      </button>
-    </div>
-    <form id="addForm" class="p-3 sm:p-4 space-y-2 sm:space-y-3">
-      <!--<div>
-        <label for="addPhone" class="block text-sm font-medium text-gray-700 mb-1">
-          手机号码 <span class="text-danger">*</span>
-        </label>
-        <input
-                type="tel"
-                id="addPhone"
-                placeholder="请输入11位手机号码"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
-                maxlength="11"
-        >
-        <p id="phoneError" class="text-danger text-xs mt-1 hidden">请输入有效的11位手机号码</p>
-      </div>-->
-      <!-- 手机号码 -->
-      <div class="flex items-center gap-2">
-        <label for="addPhone" class="block text-sm font-medium text-gray-700 min-w-[90px]">
-          手机号码 <span class="text-danger">*</span>
-        </label>
-        <div class="flex-grow">
-          <input
-                  type="tel"
-                  id="addPhone"
-                  placeholder="请输入11位手机号码"
-                  class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
-                  maxlength="11"
-          >
-          <p id="phoneError" class="text-danger text-xs mt-1 hidden">请输入有效的11位手机号码</p>
-        </div>
-      </div>
-      <!--<div>
-        <label for="addName" class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
-        <input
-                type="text"
-                id="addName"
-                placeholder="请输入姓名"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all  text-sm"
-        >
-      </div>-->
-      <!-- 姓名 -->
-      <div class="flex items-center gap-2">
-        <label for="addName" class="block text-sm font-medium text-gray-700 min-w-[90px]">姓名</label>
-        <input
-                type="text"
-                id="addName"
-                placeholder="请输入姓名"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
-        >
-      </div>
-      <!--<div>
-        <label for="addAddress" class="block text-sm font-medium text-gray-700 mb-1">地址</label>
-        <input
-                type="text"
-                id="addAddress"
-                placeholder="请输入详细地址"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all  text-sm"
-        >
-      </div>-->
-      <!-- 地址 -->
-      <div class="flex items-center gap-2">
-        <label for="addAddress" class="block text-sm font-medium text-gray-700 min-w-[90px]">地址</label>
-        <input
-                type="text"
-                id="addAddress"
-                placeholder="请输入详细地址"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
-        >
-      </div>
-      <!--<div>
-        <label for="addCity" class="block text-sm font-medium text-gray-700 mb-1">城市</label>
-        <input
-                type="text"
-                id="addCity"
-                placeholder="请输入城市"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all  text-sm"
-        >
-      </div>-->
-      <!-- 城市 -->
-      <div class="flex items-center gap-2">
-        <label for="addCity" class="block text-sm font-medium text-gray-700 min-w-[90px]">城市</label>
-        <input
-                type="text"
-                id="addCity"
-                placeholder="请输入城市"
-                class="w-40 md:w-48 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
-        >
-      </div>
-      <!--<div>
-        <label for="addDate" class="block text-sm font-medium text-gray-700 mb-1">日期</label>
-        <input
-                type="date"
-                id="addDate"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all  text-sm"
-        >
-      </div>-->
-      <!-- 日期 -->
-      <div class="flex items-center gap-2">
-        <label for="addDate" class="block text-sm font-medium text-gray-700 min-w-[90px]">日期</label>
-        <input
-                type="date"
-                id="addDate"
-                class="w-40 md:w-48 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all text-sm"
-        >
-      </div>
-      <!--<div>
-        <label for="addRemark" class="block text-sm font-medium text-gray-700 mb-1">
-          备注 <span class="text-danger">*</span>
-        </label>
-        <textarea
-                id="addRemark"
-                placeholder="请输入备注信息"
-                rows="3"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all resize-none  text-sm"        ></textarea>
-        <p id="remarkError" class="text-danger text-xs mt-1 hidden">请输入备注信息</p>
-      </div>-->
-      <!-- 备注 -->
-      <div class="flex items-start gap-2">
-        <label for="addRemark" class="block text-sm font-medium text-gray-700 min-w-[90px] pt-2">
-          备注 <span class="text-danger">*</span>
-        </label>
-        <div class="flex-grow">
-          <textarea
-                  id="addRemark"
-                  placeholder="请输入备注信息"
-                  rows="3"
-                  class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all resize-none text-sm"
-          ></textarea>
-          <p id="remarkError" class="text-danger text-xs mt-1 hidden">请输入备注信息</p>
-        </div>
-      </div>
-    </form>
-    <div class="p-2 border-t border-gray-100 flex flex-wrap justify-end gap-3 mt-1">
-      <button id="resetBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-3 rounded-lg transition-colors text-base">
-        清空
-      </button>
-      <button id="submitBtn" class="bg-success hover:bg-success/90 text-white px-5 py-3 rounded-lg transition-colors text-base">
-        提交
-      </button>
-      <button id="closeAddBtn2" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-3 rounded-lg transition-colors text-base">
-        关闭
-      </button>
-    </div>
-  </div>
-</div>
+  <script>
+    function search() {
+      const keyword = document.getElementById('searchInput').value.trim();
+      const resultBox = document.getElementById('resultBox');
 
-<!-- 引入JavaScript -->
-<script src="js/app.js"></script>
+      if (!keyword) {
+        resultBox.innerHTML = "❗請輸入手機號碼。";
+        return;
+      }
+
+      Papa.parse("members.csv", {
+        download: true,
+        header: true,
+        complete: function(results) {
+          const data = results.data;
+          const match = data.find(row => row["Cell Phone"] === keyword);
+
+          if (match) {
+            resultBox.innerHTML = `
+✅ 找到會員資料：
+
+註冊日期：${match.Date}
+地址：${match.Address}
+城市：${match.Location}
+備註：${match.Note}
+姓名：${match.Name}
+手機：${match["Cell Phone"]}
+            `;
+          } else {
+            resultBox.innerHTML = "❌ 未找到符合的會員資料。";
+          }
+        },
+        error: function(err) {
+          resultBox.innerHTML = "❗讀取資料時發生錯誤。";
+          console.error(err);
+        }
+      });
+    }
+  </script>
 
 </body>
 </html>
